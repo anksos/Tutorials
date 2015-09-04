@@ -1,33 +1,45 @@
 Hello folks,
 
-Before some days CentOS team released a new version for CentOS the 6.6. After some upgrades and lab tests in the infrastructure I found some problems with the backing up procedure from the DPM. 
+Before some days CentOS team released a new version for CentOS the 6.6. After some upgrades and lab tests in the infrastructure I found 
+some problems with the backing up procedure from the DPM. 
 
-To be more specific when you try to take a backup from a CentOS 6.6 upgraded image from CentOS 6.5 with Hyper-V Backup Essentials installed (the module/package which is responsible for the Online VSS backup on Linux VMs) you are getting freeze the VM with kernel panic errors on the /var/log/messages file, so the only thing you can do is to hard reset your VM. To avoid all this thing please follow the below instructions:
+To be more specific when you try to take a backup from a CentOS 6.6 upgraded image from CentOS 6.5 with Hyper-V Backup Essentials 
+installed (the module/package which is responsible for the Online VSS backup on Linux VMs) you are getting freeze the VM with kernel 
+panic errors on the /var/log/messages file, so the only thing you can do is to hard reset your VM. To avoid all this thing please follow 
+the below instructions:
 
-1. You have to remove your integration services so you can install again the new released package for CentOS 6.6 (hyperv-daemons) which includes the Online backup ability without any problem
- rpm -e microsoft-hyper-v kmod-microsoft-hyper-v 
+1. You have to remove your integration services so you can install again the new released package for CentOS 6.6 (hyperv-daemons) 
+which includes the Online backup ability without any problem
+	rpm -e microsoft-hyper-v kmod-microsoft-hyper-v 
 When uninstall complete please reboot your VM.
 
-2. After the reboot please login on your VM and install the hyperv-daemons package (if you are not root run it with sudo in front of the command below)
- yum install hyperv-daemons 
+2. After the reboot please login on your VM and install the hyperv-daemons package (if you are not root run it with sudo in front 
+of the command below)
+	yum install hyperv-daemons 
 When install complete please reboot your VM.
 
-Even after the above instructions completed and the VM is working fine, when you try to backup your VM you will get some errors on your remote console of hang_task_timeout_secs and inside the /var/log/messages file that the Hyper-V VSS: VSS: freeze of /boot: Permission denied. After a contact with Microsoft and some other on Technet the workaround is below. These problems occurs because of the SELINUX is not disable and be more specific it doesn't allow the hyper-v vss daemon to run. To workaround it please do the following:
+Even after the above instructions completed and the VM is working fine, when you try to backup your VM you will get some errors on 
+your remote console of hang_task_timeout_secs and inside the /var/log/messages file that the Hyper-V VSS: VSS: freeze of /boot: Permission denied. 
+After a contact with Microsoft and some other on Technet the workaround is below. These problems occurs because of the SELINUX is not disable 
+and be more specific it doesn't allow the hyper-v vss daemon to run. To workaround it please do the following:
 
 1. Disable SELINUX
 
- vi /etc/selinux/config
- disable SELINUX
- ESC
- :wq
- reboot
+	vi /etc/selinux/config
+	disable SELINUX
+	ESC
+	:wq
+	reboot
 
-2. If you are having strictly policy and for some reason you are using the SELINUX firewall module, run the following command in order to give rights on the hyper-v vss daemon to run on your CentOS
+2. If you are having strictly policy and for some reason you are using the SELINUX firewall module, run the following command in order to give 
+rights on the hyper-v vss daemon to run on your CentOS
 
- semanage permissive -a hypervvssd_t 
+	semanage permissive -a hypervvssd_t 
 If you get an error "command not found" is because you have to install the python policy core utilities that SELINUX uses. Run the following command
- yum install policycoreutils-python 
+	yum install policycoreutils-python 
 
-These things above have been tested on Windows Server Hyper-V 2012 R2 and DPM 2012 R2 UR3 and works without any problem (for now) :) Please, bofore do anything on your production Virtual Machines please test it on your infrastructure too because some things might not be the same or not fitting with the guide above.
+These things above have been tested on Windows Server Hyper-V 2012 R2 and DPM 2012 R2 UR3 and works without any problem (for now) :) 
+Please, bofore do anything on your production Virtual Machines please test it on your infrastructure too because some things might NOT
+be the same or not fitting with the guide above.
 
 Have a nice day.
